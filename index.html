@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Probabilistic Scene Graphs: Hierarchical Representation and Real-time System</title>
+<meta name="description" content="Probabilistic Scene Graphs (PSG) represent a scene as a posterior over possible scene graphs. We instantiate it with hierarchical graphs of Gaussians (HGG), a real-time mapping system that keeps uncertainty alive through graph creation, alignment and correction.">
+<meta name="keywords" content="Probabilistic Scene Graph, PSG, HGG, 3D scene graph, SLAM, robot perception, Gaussian, Normal-Inverse-Wishart, graph alignment, KTH">
+<meta property="og:title" content="Probabilistic Scene Graphs">
+<meta property="og:description" content="A scene graph that is a posterior over graphs, and a real-time system (HGG) that keeps it one.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="static/videos/representation_poster.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><ellipse cx='16' cy='16' rx='13' ry='8' transform='rotate(-25 16 16)' fill='none' stroke='%23C8552A' stroke-width='3'/><circle cx='16' cy='16' r='3' fill='%2316222E'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16222E;
+  --ink-2:#2B3A49;
+  --paper:#FFFFFF;
+  --paper-2:#F6F3EE;
+  --rust:#C8552A;
+  --rust-deep:#A64521;
+  --muted:#5B6672;
+  --rule:#E3DED6;
+  --rule-dark:#2E3F50;
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  --measure:46rem;
+  --wide:72rem;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto} *{transition:none!important;animation:none!important}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:1.0625rem;line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:var(--rust-deep);text-decoration-thickness:1px;text-underline-offset:3px}
+a:hover{color:var(--rust)}
+:focus-visible{outline:2px solid var(--rust);outline-offset:3px;border-radius:2px}
+img,video{max-width:100%;height:auto;display:block}
+h1,h2,h3{font-family:var(--serif);font-weight:500;line-height:1.15;margin:0;letter-spacing:-0.005em}
+p{margin:0 0 1.1em}
+.wrap{width:min(100% - 2.5rem,var(--measure));margin-inline:auto}
+.wrap-wide{width:min(100% - 2.5rem,var(--wide));margin-inline:auto}
+
+/* ---------- hero ---------- */
+.hero{background:var(--ink);color:#F3EEE6;padding:4.5rem 0 0;position:relative;overflow:hidden}
+.hero .wrap-wide{position:relative;text-align:center}
+.hero-mark{position:absolute;inset:0;pointer-events:none;opacity:.5}
+.hero h1{font-size:clamp(2rem,5.2vw,3.6rem);font-weight:500;color:#FFFFFF;margin:0 auto .5rem;max-width:30ch}
+.hero h1 .sub{display:block;font-size:.58em;font-weight:400;font-style:italic;color:#CFC8BC;margin-top:.45rem;letter-spacing:0}
+.hero .venue{font-family:var(--serif);font-style:italic;color:#CFC8BC;font-size:1.1rem;margin:0 0 2rem}
+.authors{font-size:1.1rem;line-height:1.9;margin:0 auto 1rem;max-width:56rem}
+.authors span{white-space:nowrap}
+.authors sup{font-size:.68em;color:var(--rust);margin-left:.1em}
+.affil{font-size:.95rem;color:#B9B2A6;line-height:1.6;margin:0 auto 2.2rem;max-width:48rem}
+.affil sup{color:var(--rust);font-size:.8em}
+.links{display:flex;flex-wrap:wrap;justify-content:center;gap:.6rem;margin-bottom:3rem}
+.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.1rem;border-radius:999px;border:1px solid var(--rule-dark);background:#1F2E3C;color:#F3EEE6;text-decoration:none;font-weight:500;font-size:.95rem;transition:background .15s,border-color .15s}
+.btn:hover{background:#2A3B4B;border-color:#4A5D70;color:#fff}
+.btn svg{width:1.05rem;height:1.05rem;fill:currentColor;flex:none}
+.btn.primary{background:var(--rust);border-color:var(--rust);color:#fff}
+.btn.primary:hover{background:#D6653A;border-color:#D6653A}
+.btn[aria-disabled="true"]{opacity:.55;cursor:default;pointer-events:none}
+.hero-video{position:relative;z-index:1;margin:0 auto -1px;width:min(100% - 2.5rem,66rem);border-radius:14px 14px 0 0;overflow:hidden;box-shadow:0 -1px 0 rgba(255,255,255,.08),0 30px 60px -30px rgba(0,0,0,.6);background:#000}
+.hero-video video{width:100%;aspect-ratio:16/9;background:#000}
+.hero-foot{background:var(--paper);height:3rem}
+.video-note{text-align:center;font-size:.9rem;color:var(--muted);margin:-.75rem 0 0}
+
+/* ---------- sections ---------- */
+section{padding:4.5rem 0}
+section.alt{background:var(--paper-2)}
+.section-head{margin-bottom:1.6rem}
+.section-head h2{font-size:clamp(1.7rem,3.2vw,2.35rem)}
+.section-head h2 + p{margin-top:.55rem;color:var(--muted);font-size:1.05rem}
+.lede{font-family:var(--serif);font-size:clamp(1.35rem,2.4vw,1.75rem);line-height:1.4;text-align:center;max-width:34ch;margin:0 auto;color:var(--ink)}
+.lede em{color:var(--rust);font-style:italic}
+.text-cols{display:grid;grid-template-columns:1fr;gap:1.2rem 3rem}
+@media(min-width:900px){.text-cols.two{grid-template-columns:1fr 1fr}}
+
+figure{margin:0}
+figure.plate{background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:1rem}
+section.alt figure.plate{background:#fff}
+figure.plate img{border-radius:4px}
+figcaption{font-size:.92rem;color:var(--muted);line-height:1.55;margin-top:.9rem;padding:0 .25rem}
+figcaption b{color:var(--ink);font-weight:600}
+.fig-gap{margin-top:2.4rem}
+.layers-stage{position:relative;background:#fff;border-radius:4px;overflow:hidden}
+.layers-stage video{width:100%;aspect-ratio:1280/788;display:block}
+.layer-labels{list-style:none;margin:0;padding:0;position:absolute;left:1.25rem;top:0;bottom:0;width:min(34%,15rem);pointer-events:none}
+.layer-labels li{position:absolute;left:0;transform:translateY(-50%);padding-left:1.1rem;border-left:3px solid var(--rust)}
+.layer-labels span{display:block;font-family:var(--serif);font-size:clamp(1rem,2.2vw,1.45rem);line-height:1.1;color:var(--ink)}
+.layer-labels small{display:block;font-size:clamp(.68rem,1.2vw,.85rem);color:var(--muted);line-height:1.3;margin-top:.25rem}
+@media(max-width:600px){.layer-labels small{display:none}}
+
+/* three failure modes */
+.problem{display:grid;gap:1.25rem;grid-template-columns:1fr;margin-top:2.2rem}
+@media(min-width:760px){.problem{grid-template-columns:repeat(3,1fr)}}
+.problem > div{border-top:3px solid var(--rust);padding-top:1rem}
+.problem h3{font-size:1.25rem;margin-bottom:.4rem}
+.problem p{font-size:.98rem;color:var(--ink-2);margin:0}
+
+/* pipeline stages: a real sequence, so numbering is information */
+.stages{counter-reset:stage;display:grid;gap:1.6rem 2.6rem;grid-template-columns:1fr;margin-top:2.2rem;width:min(100%,62rem);margin-inline:auto}
+@media(min-width:860px){.stages{grid-template-columns:repeat(3,1fr)}}
+.stages > div{counter-increment:stage;position:relative;padding-left:2.9rem}
+.stages > div::before{content:counter(stage);position:absolute;left:0;top:-.1rem;width:2.1rem;height:2.1rem;border-radius:50%;background:var(--ink);color:#fff;font-family:var(--serif);font-size:1.15rem;display:grid;place-items:center}
+.stages h3{font-size:1.3rem;margin-bottom:.35rem}
+.stages p{font-size:.98rem;color:var(--ink-2);margin:0}
+.stages code{font-family:var(--sans);font-style:italic;color:var(--ink)}
+
+/* results */
+.keyfacts{display:grid;gap:1.25rem;grid-template-columns:1fr 1fr;margin:2rem 0 2.5rem}
+@media(min-width:760px){.keyfacts{grid-template-columns:repeat(4,1fr)}}
+.keyfacts > div{border-left:1px solid var(--rule);padding-left:1.1rem}
+.keyfacts .n{font-family:var(--serif);font-size:2.1rem;line-height:1;color:var(--rust);font-variant-numeric:tabular-nums}
+.keyfacts .n small{font-size:.5em;color:var(--muted);margin-left:.15rem}
+.keyfacts .l{font-size:.9rem;color:var(--muted);margin-top:.45rem;line-height:1.4}
+.table-wrap{overflow-x:auto;margin:1.5rem 0 .5rem;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;min-width:40rem;font-size:.95rem;font-variant-numeric:tabular-nums}
+th,td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.85rem;color:var(--muted);border-bottom:1px solid var(--ink)}
+td.num,th.num{text-align:right}
+td .best{color:var(--rust);font-weight:600}
+tbody tr:last-child td{border-bottom:none}
+.tnote{font-size:.88rem;color:var(--muted);margin-top:.6rem}
+.down table{min-width:0}
+
+/* downstream */
+.down{display:grid;gap:3rem;grid-template-columns:1fr;margin-top:1rem}
+.down img{border-radius:8px;border:1px solid var(--rule);margin-top:1.4rem;width:100%}
+.down h3{font-size:1.4rem;margin-bottom:.6rem}
+
+/* bibtex */
+.bib{position:relative;background:var(--ink);color:#E8E2D8;border-radius:10px;padding:1.4rem 1.5rem;overflow:auto;font-size:.9rem;line-height:1.55;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;margin:0}
+.copy{position:absolute;top:.75rem;right:.75rem;background:#2A3B4B;color:#fff;border:1px solid #3B4F63;border-radius:6px;padding:.35rem .7rem;font:inherit;font-family:var(--sans);font-size:.82rem;cursor:pointer}
+.copy:hover{background:#34475A}
+.bib-wrap{position:relative}
+
+footer{border-top:1px solid var(--rule);padding:2.5rem 0 3rem;color:var(--muted);font-size:.92rem}
+footer .wrap{display:flex;flex-wrap:wrap;gap:1rem 2rem;justify-content:space-between;align-items:baseline}
+footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <svg class="hero-mark" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+    <!-- a few full-covariance Gaussians, drawn as nested 1σ/2σ ellipses, linked by RNG-style edges -->
+    <defs>
+      <radialGradient id="g" cx="50%" cy="50%" r="50%">
+        <stop offset="0" stop-color="#C8552A" stop-opacity=".22"/>
+        <stop offset="1" stop-color="#C8552A" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <g stroke="#3B4F63" stroke-width="1" fill="none">
+      <line x1="160" y1="120" x2="420" y2="90"/>
+      <line x1="420" y1="90" x2="700" y2="150"/>
+      <line x1="160" y1="120" x2="330" y2="330"/>
+      <line x1="700" y1="150" x2="1000" y2="110"/>
+      <line x1="1000" y1="110" x2="1090" y2="340"/>
+      <line x1="700" y1="150" x2="820" y2="360"/>
+    </g>
+    <g fill="url(#g)">
+      <ellipse cx="160" cy="120" rx="150" ry="80" transform="rotate(-18 160 120)"/>
+      <ellipse cx="420" cy="90" rx="110" ry="60" transform="rotate(12 420 90)"/>
+      <ellipse cx="700" cy="150" rx="190" ry="70" transform="rotate(-8 700 150)"/>
+      <ellipse cx="1000" cy="110" rx="120" ry="90" transform="rotate(30 1000 110)"/>
+      <ellipse cx="330" cy="330" rx="90" ry="50" transform="rotate(-40 330 330)"/>
+      <ellipse cx="820" cy="360" rx="130" ry="55" transform="rotate(20 820 360)"/>
+      <ellipse cx="1090" cy="340" rx="80" ry="120" transform="rotate(-10 1090 340)"/>
+    </g>
+    <g stroke="#C8552A" stroke-opacity=".55" stroke-width="1.2" fill="none">
+      <ellipse cx="160" cy="120" rx="75" ry="40" transform="rotate(-18 160 120)"/>
+      <ellipse cx="420" cy="90" rx="55" ry="30" transform="rotate(12 420 90)"/>
+      <ellipse cx="700" cy="150" rx="95" ry="35" transform="rotate(-8 700 150)"/>
+      <ellipse cx="1000" cy="110" rx="60" ry="45" transform="rotate(30 1000 110)"/>
+      <ellipse cx="330" cy="330" rx="45" ry="25" transform="rotate(-40 330 330)"/>
+      <ellipse cx="820" cy="360" rx="65" ry="27" transform="rotate(20 820 360)"/>
+      <ellipse cx="1090" cy="340" rx="40" ry="60" transform="rotate(-10 1090 340)"/>
+    </g>
+    <g fill="#F3EEE6" fill-opacity=".8">
+      <circle cx="160" cy="120" r="3"/><circle cx="420" cy="90" r="3"/><circle cx="700" cy="150" r="3"/>
+      <circle cx="1000" cy="110" r="3"/><circle cx="330" cy="330" r="3"/><circle cx="820" cy="360" r="3"/><circle cx="1090" cy="340" r="3"/>
+    </g>
+  </svg>
+
+  <div class="wrap-wide">
+    <h1>Probabilistic Scene Graphs
+      <span class="sub">Hierarchical Representation and Real-time System</span>
+    </h1>
+    <p class="venue">arXiv preprint, 2026</p>
+
+    <p class="authors">
+      <span>Waqas Ali<sup>1</sup>,</span>
+      <span>Michele Antonazzi<sup>1</sup>,</span>
+      <span>Timon Homberger<sup>1</sup>,</span>
+      <span>Thien-Minh Nguyen<sup>2</sup>,</span>
+      <span>Lukas Rosenberger Schmid<sup>3</sup>,</span>
+      <span>Patric Jensfelt<sup>1</sup>,</span>
+      <span>Yixi Cai<sup>1</sup></span>
+    </p>
+    <p class="affil">
+      <sup>1</sup>Division of Robotics, Perception and Learning, KTH Royal Institute of Technology<br>
+      <sup>2</sup>The University of Queensland &nbsp;&nbsp; <sup>3</sup>University of Technology Nuremberg
+    </p>
+
+    <nav class="links" aria-label="Paper resources">
+      <a class="btn primary" href="static/pdf/PSG.pdf">
+        <svg viewBox="0 0 24 24"><path d="M6 2h8l6 6v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm7 1.5V9h5.5L13 3.5zM8 12h8v1.5H8V12zm0 3.5h8V17H8v-1.5z"/></svg>
+        Paper
+      </a>
+      <a class="btn" href="https://arxiv.org/abs/2609.23144">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16v2H4V4zm0 7h16v2H4v-2zm0 7h10v2H4v-2z"/></svg>
+        arXiv
+      </a>
+      <a class="btn" href="#video">
+        <svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5zm6 3v8l6-4-6-4z"/></svg>
+        Video
+      </a>
+      <a class="btn" href="https://anonymous.4open.science/r/PSG-7888/PSGSup.pdf">
+        <svg viewBox="0 0 24 24"><path d="M5 3h14a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm2 4v2h10V7H7zm0 4v2h10v-2H7zm0 4v2h6v-2H7z"/></svg>
+        Supplementary
+      </a>
+      <a class="btn" href="#" aria-disabled="true" title="Code release coming soon">
+        <svg viewBox="0 0 24 24"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.09 0 4.42-2.7 5.4-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg>
+        Code (soon)
+      </a>
+    </nav>
+  </div>
+
+  <div class="hero-video" id="video">
+    <video controls preload="metadata" playsinline poster="static/videos/psg_demo_poster.jpg">
+      <source src="static/videos/psg_demo.mp4" type="video/mp4">
+      Your browser does not support HTML video. <a href="static/videos/psg_demo.mp4">Download the video.</a>
+    </video>
+  </div>
+</header>
+<div class="hero-foot"></div>
+<p class="video-note">Five-minute overview: the problem, KITTI and in-house mapping at sensor rate, and language-grounded navigation on Spot.</p>
+
+<!-- ============ LEDE ============ -->
+<section>
+  <div class="wrap">
+    <p class="lede">A scene graph that is a <em>posterior over graphs</em>, and a real-time system that keeps it one through creation, alignment and correction.</p>
+  </div>
+</section>
+
+<!-- ============ ABSTRACT ============ -->
+<section class="alt">
+  <div class="wrap">
+    <div class="section-head"><h2>Abstract</h2></div>
+    <p>3D scene graphs provide semantically rich and hierarchical representations for robot perception. However, existing systems do not maintain uncertainty as an explicit belief or propagate it through the operations that construct and refine the graph. We introduce the <b>Probabilistic Scene Graph (PSG)</b>, a generalization of the conventional scene graph that represents a posterior over possible graphs, factorized into a discrete graph structure of entities, relations and semantic attributes, and continuous states that ground them spatially, with uncertainty maintained over both components. Geometry is carried directly by the nodes rather than selected from a separately constructed metric map, so a metric map, where needed, follows from the graph rather than preceding it.</p>
+    <p>We instantiate PSG's probabilistic spatial grounding with <b>hierarchical graphs of Gaussians (HGG)</b>: each object primitive is represented by a full-covariance Gaussian under a Normal-Inverse-Wishart belief, and the same parametrization applied recursively within a node yields a geometry graph that resolves its surface at finer resolution. We then build a mapping pipeline that preserves these beliefs throughout graph construction and refinement: a purely graph-based coarse-to-fine alignment registers observations by comparing node beliefs, while a nested Expectation-Maximization and factor-graph optimization jointly refines poses, object parameters and internal geometry.</p>
+    <p>Across six datasets spanning indoor RGB-D, outdoor LiDAR and cross-modality deployment, HGG operates at sensor rate with near-constant memory and achieves state-of-the-art object accuracy and zero-shot graph alignment.</p>
+  </div>
+</section>
+
+<!-- ============ PROBLEM ============ -->
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Why a point estimate is not enough</h2>
+      <p>A robot never observes the true scene; it receives noisy, partial measurements. A conventional scene graph collapses them to a point estimate the moment a node is created, and every later operation on that node inherits the loss.</p>
+    </div>
+    <div class="problem">
+      <div>
+        <h3>Ghost objects</h3>
+        <p>Association has no record of how little evidence stood behind a first view. Once drift displaces a node, a second view of the same object fails to match and is instantiated again.</p>
+      </div>
+      <div>
+        <h3>Fragmentation</h3>
+        <p>When the trajectory is corrected, nodes that were fused as equals cannot be re-weighted: a single glimpse at range pulls the merged estimate as hard as an object resolved over many views.</p>
+      </div>
+      <div>
+        <h3>Frozen geometry</h3>
+        <p>A node built from a partial view is committed to the shape of that view. Later, better observations cannot outweigh it, so the extent never converges.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ REPRESENTATION ============ -->
+<section class="alt">
+  <div class="wrap-wide">
+    <div class="wrap" style="margin-left:auto;margin-right:auto">
+      <div class="section-head">
+        <h2>The representation</h2>
+        <p>PSG defines the scene graph as a posterior <i>P</i>(<i>S</i>, <i>θ</i> | <i>Z</i>) over a symbolic structure <i>S</i> and continuous states <i>θ</i>. HGG instantiates the geometric belief hierarchically with the same primitive at every level.</p>
+      </div>
+    </div>
+    <figure class="plate layers">
+      <div class="layers-stage">
+        <video autoplay muted loop playsinline preload="metadata" poster="static/videos/representation_poster.jpg" aria-label="Rotating view of the three layers of the hierarchical probabilistic scene graph: object graph on top, geometry graph in the middle, extracted dense map at the bottom.">
+          <source src="static/videos/representation_loop.mp4" type="video/mp4">
+        </video>
+        <ul class="layer-labels" aria-hidden="true">
+          <li style="top:14%"><span>Object graph</span><small>one Gaussian per object, with a belief over it</small></li>
+          <li style="top:46%"><span>Geometry graph</span><small>the same primitive inside each node</small></li>
+          <li style="top:77%"><span>Extracted map</span><small>sampled from the graph on demand</small></li>
+        </ul>
+      </div>
+      <figcaption><b>Object graph.</b> Each object primitive is a full-covariance Gaussian over position and extent, held under a Normal-Inverse-Wishart posterior whose width is set by the evidence seen so far. <b>Geometry graph.</b> Inside every node the same definition is applied one level down, and the combined means and covariances form a belief over the object's surface. <b>Extracted map.</b> Dense semantic point clouds can be sampled from the graph when a downstream task needs one. Color denotes semantic label.</figcaption>
+    </figure>
+    <div class="wrap fig-gap" style="margin-left:auto;margin-right:auto">
+      <div class="text-cols two">
+        <p>The pair (<i>μ</i>, <i>Σ</i>) describes the physical object, not its uncertainty. The uncertainty lives in a conjugate Normal-Inverse-Wishart belief over that pair, whose pseudo-count <i>κ</i> is simply the number of measurements attributed to the node. An object glimpsed once at range stays uncertain in both position and extent until further views accumulate; an object seen from many angles contracts.</p>
+        <p>Covariances live on the manifold of symmetric positive-definite matrices, so every comparison, interpolation and refinement in the pipeline is carried out with operations that respect that geometry: 2-Wasserstein and affine-invariant Riemannian distances for matching, geodesic interpolation along edges, and residuals in the tangent space during optimization.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SYSTEM ============ -->
+<section>
+  <div class="wrap-wide">
+    <div class="wrap" style="margin-left:auto;margin-right:auto">
+      <div class="section-head">
+        <h2>The system</h2>
+        <p>Given a semantic point cloud and odometry, HGG builds a local hierarchical graph per frame, aligns it to the global graph through coarse-to-fine graph alignment, and refines the result with nested optimization. The belief established at creation is carried through, never discarded.</p>
+      </div>
+    </div>
+    <figure class="plate">
+      <img src="static/images/pipeline.png" loading="lazy" alt="System overview: semantic labels, point cloud and odometry feed graph creation, then coarse-to-fine alignment, then factor-graph and EM local correction, followed by loop closure and global correction.">
+    </figure>
+    <div class="wrap-wide">
+      <div class="stages">
+        <div>
+          <h3>Creation</h3>
+          <p>Each frame is clustered into object instances. Every instance becomes a Gaussian node with <code>κ</code> set to its point count, and is recursively partitioned into a geometry graph expressed in the object frame. The graph, not a dense map, is the unit of measurement.</p>
+        </div>
+        <div>
+          <h3>Alignment</h3>
+          <p>Object nodes are matched by a 2-Wasserstein cost plus a semantic-neighborhood histogram, registered with node and edge constraints, then refined on the geometry graphs with Weisfeiler-Lehman structural features. Matched nodes merge by exact conjugate update, weighted by evidence.</p>
+        </div>
+        <div>
+          <h3>Correction</h3>
+          <p>A factor graph jointly refines frame poses and object frames with residuals on Sym<sup>+</sup>(3); an EM step refines each object's internal geometry in its own frame. A Fisher-information analysis shows the split costs only a second-order loss in efficiency.</p>
+        </div>
+      </div>
+    </div>
+
+    <figure class="plate fig-gap">
+      <img src="static/images/alignment.png" loading="lazy" alt="Coarse-to-fine graph alignment: object-level correspondence from geometric and structural costs solved with the Hungarian algorithm, then geometry-level correspondence initialized by the object matches.">
+      <figcaption><b>Graph-to-graph alignment without a dense map.</b> Coarse correspondences are solved over all semantically valid object pairs; the dense geometry graphs are then searched only within the pairs the object graph already matched. No point-cloud encoder and no embedding trained for alignment are required, which is what lets the same method run zero-shot on ScanNet-SG.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ RESULTS ============ -->
+<section class="alt">
+  <div class="wrap-wide">
+    <div class="wrap" style="margin-left:auto;margin-right:auto">
+      <div class="section-head">
+        <h2>Results</h2>
+        <p>Six datasets: uHumans2 (indoor RGB-D), KITTI, KITTI-Carla and MCD (outdoor LiDAR), ScanNet-SG (graph alignment), and two in-house LiDAR-camera sequences including an indoor-to-outdoor transition.</p>
+      </div>
+
+      <div class="keyfacts">
+        <div><div class="n">13–51<small>ms</small></div><div class="l">per frame across RGB-D, solid-state and 64/128-channel LiDAR, with no reconfiguration between sensors</div></div>
+        <div><div class="n">&lt;1<small>GB</small></div><div class="l">memory on every sequence, plateauing once the object population is instantiated; dense baselines exceed 50 GB</div></div>
+        <div><div class="n">0.80–0.94</div><div class="l">object F1 on every dataset, against 0.36–0.67 for the best competing system on each</div></div>
+        <div><div class="n">45.7→2.4<small>m</small></div><div class="l">trajectory error on KITTI-Carla, correcting its own KISS-ICP front-end from 45.73 m to 2.35 m ATE</div></div>
+      </div>
+
+      <h3 style="font-size:1.35rem">Object accuracy</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Dataset</th><th>Sensor</th><th class="num">Best baseline F1</th><th class="num">HGG F1</th><th class="num">HGG recall</th><th class="num">HGG time</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>uHumans2 Apartment</td><td>RGB-D</td><td class="num">0.38 <span style="color:var(--muted)">Kimera</span></td><td class="num"><span class="best">0.86</span></td><td class="num">0.79</td><td class="num">29.3 ms</td></tr>
+            <tr><td>uHumans2 Office</td><td>RGB-D</td><td class="num">0.36 <span style="color:var(--muted)">Kimera</span></td><td class="num"><span class="best">0.83</span></td><td class="num">0.79</td><td class="num">28.5 ms</td></tr>
+            <tr><td>uHumans2 Subway</td><td>RGB-D</td><td class="num">0.50 <span style="color:var(--muted)">Hydra</span></td><td class="num"><span class="best">0.88</span></td><td class="num">0.97</td><td class="num">30.6 ms</td></tr>
+            <tr><td>In-house-01</td><td>LiDAR + RGB</td><td class="num">0.60 <span style="color:var(--muted)">Hydra</span></td><td class="num"><span class="best">0.94</span></td><td class="num">0.88</td><td class="num">43.6 ms</td></tr>
+            <tr><td>In-house-02 (indoor→outdoor)</td><td>LiDAR + RGB</td><td class="num">0.43 <span style="color:var(--muted)">Kimera</span></td><td class="num"><span class="best">0.88</span></td><td class="num">0.92</td><td class="num">50.6 ms</td></tr>
+            <tr><td>KITTI-Carla</td><td>LiDAR</td><td class="num">0.63 <span style="color:var(--muted)">SG-SLAM</span></td><td class="num"><span class="best">0.88</span></td><td class="num">0.89</td><td class="num">13.4 ms</td></tr>
+            <tr><td>KITTI</td><td>LiDAR</td><td class="num">0.67 <span style="color:var(--muted)">SG-SLAM</span></td><td class="num"><span class="best">0.91</span></td><td class="num">0.93</td><td class="num">26.1 ms</td></tr>
+            <tr><td>MCD-KTH</td><td>LiDAR</td><td class="num">0.54 <span style="color:var(--muted)">SG-SLAM</span></td><td class="num"><span class="best">0.80</span></td><td class="num">0.79</td><td class="num">14.4 ms</td></tr>
+            <tr><td>MCD-NTU</td><td>LiDAR</td><td class="num">0.56 <span style="color:var(--muted)">SG-SLAM</span></td><td class="num"><span class="best">0.82</span></td><td class="num">0.84</td><td class="num">20.1 ms</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="tnote">Indoor baselines (Kimera, Hydra, ConceptGraphs) share the same Kimera-VIO odometry as HGG; outdoor systems share KISS-ICP. Thing classes only, following the SemanticKITTI split. Full tables, including ground-truth-pose and object-SLAM comparisons, are in the paper.</p>
+    </div>
+
+    <figure class="plate fig-gap">
+      <img src="static/images/qualitative_subway.png" loading="lazy" alt="Qualitative comparison on uHumans2-Subway: ground truth, Hydra with many missed objects, ConceptGraphs with many ghost objects, and HGG covering almost all objects with high precision.">
+      <figcaption><b>uHumans2-Subway.</b> Hydra is dominated by missed detections (blue): a graph abstracted from a dense reconstruction can only contain what the reconstruction builds. ConceptGraphs reaches most instances but re-instantiates them, surrounding recovered objects with ghosts (red). HGG covers almost every object with high precision.</figcaption>
+    </figure>
+
+  </div>
+</section>
+
+<!-- ============ DOWNSTREAM ============ -->
+<section>
+  <div class="wrap-wide">
+    <div class="wrap" style="margin-left:auto;margin-right:auto">
+      <div class="section-head">
+        <h2>Acting on the graph</h2>
+        <p>Retrieval and navigation run directly on the probabilistic scene graph, with no dense metric map built first.</p>
+      </div>
+      <div class="down">
+        <div>
+          <h3>Language-grounded retrieval</h3>
+          <p>Fifteen queries per uHumans2 scene, spanning unique-instance, spatial-relational (“the chair next to the computer”) and instance-disambiguation cases, each with exactly one correct instance. Both systems use the same CLIP checkpoint, so the difference is the map. Scoring relations against object extents rather than centroids is what orders candidates correctly at rank one.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Scene</th><th class="num">ConceptGraphs R@1</th><th class="num">HGG R@1</th><th class="num">HGG R@3</th></tr></thead>
+              <tbody>
+                <tr><td>Apartment</td><td class="num">0.35</td><td class="num"><span class="best">0.65</span></td><td class="num">0.94</td></tr>
+                <tr><td>Office</td><td class="num">0.20</td><td class="num"><span class="best">0.47</span></td><td class="num">0.93</td></tr>
+                <tr><td>Subway</td><td class="num">0.07</td><td class="num"><span class="best">0.43</span></td><td class="num">0.93</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <h3>Real-world navigation on Spot</h3>
+          <p>HGG runs onboard a Boston Dynamics Spot carrying a Manifold Odin 1 (solid-state LiDAR with a 120° field of view, RGB camera, built-in odometry). Three sequential language commands, two of them relational, take the robot from an indoor corridor to an outdoor bench; a task succeeds when Spot stops within 1.0 m of the target, and all three succeed.</p>
+          <p>Traversable space is read from the geometry graphs, while object extents, evidence counts and relational edges handle target identification, disambiguation and goal placement. The <a href="#video">video above</a> shows the runs.</p>
+          <img src="static/images/spot_navigation.jpg" alt="Spot in a courtyard beside a live view of the probabilistic scene graph, with the target node labelled fire extinguisher and the planned path drawn through traversable space." loading="lazy">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BIBTEX ============ -->
+<section class="alt">
+  <div class="wrap">
+    <div class="section-head"><h2>Citation</h2></div>
+    <div class="bib-wrap">
+      <button class="copy" type="button" id="copyBib" aria-label="Copy BibTeX">Copy</button>
+<pre class="bib" id="bibtex">@article{ali2026probabilistic,
+  title   = {Probabilistic Scene Graphs: Hierarchical Representation and Real-time System},
+  author  = {Ali, Waqas and Antonazzi, Michele and Homberger, Timon and Nguyen, Thien-Minh and Schmid, Lukas Rosenberger and Jensfelt, Patric and Cai, Yixi},
+  journal = {arXiv preprint arXiv:2609.23144},
+  year    = {2026}
+}</pre>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Division of Robotics, Perception and Learning, KTH Royal Institute of Technology</span>
+    <span><a href="https://arxiv.org/abs/2609.23144">arXiv:2609.23144</a></span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var b=document.getElementById('copyBib'),t=document.getElementById('bibtex');
+  if(!b||!t||!navigator.clipboard)return;
+  b.addEventListener('click',function(){
+    navigator.clipboard.writeText(t.textContent).then(function(){
+      b.textContent='Copied';setTimeout(function(){b.textContent='Copy'},1600);
+    });
+  });
+})();
+</script>
+</body>
+</html>
